@@ -41,12 +41,12 @@ object TicTacToeWidgetState {
     fun playMove(
         preferences: MutablePreferences,
         index: Int,
-    ) {
+    ): Boolean {
         val board = (preferences[boardKey] ?: EmptyBoard).toCharArray()
         val currentTurn = (preferences[currentTurnKey] ?: X).first()
         val outcome = preferences[outcomeKey]
 
-        if (index !in 0..8 || outcome != null || board[index] != '-') return
+        if (index !in 0..8 || outcome != null || board[index] != '-') return false
 
         board[index] = currentTurn
 
@@ -66,6 +66,7 @@ object TicTacToeWidgetState {
         }
 
         preferences[boardKey] = String(board)
+        return true
     }
 
     fun reset(preferences: MutablePreferences) {

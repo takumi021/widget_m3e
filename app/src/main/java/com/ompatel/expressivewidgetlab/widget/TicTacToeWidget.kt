@@ -77,10 +77,13 @@ class MoveAction : ActionCallback {
         parameters: ActionParameters,
     ) {
         val index = parameters[CellIndexKey] ?: return
+        var boardChanged = false
         updateAppWidgetState(context, glanceId) { preferences: MutablePreferences ->
-            TicTacToeWidgetState.playMove(preferences, index)
+            boardChanged = TicTacToeWidgetState.playMove(preferences, index)
         }
-        TicTacToeWidget().update(context, glanceId)
+        if (boardChanged) {
+            TicTacToeWidget().update(context, glanceId)
+        }
     }
 }
 
@@ -91,30 +94,30 @@ private fun TicTacToeWidgetContent(
     uiState: TicTacToeUiState,
 ) {
     val widgetSize = LocalSize.current
-    val compact = widgetSize.width < 220.dp || widgetSize.height < 190.dp
-    val roomy = widgetSize.width >= 280.dp && widgetSize.height >= 240.dp
+    val compact = widgetSize.width < 240.dp || widgetSize.height < 220.dp
+    val roomy = widgetSize.width >= 300.dp && widgetSize.height >= 260.dp
     val cellSize = when {
-        roomy -> 72.dp
-        compact -> 48.dp
-        else -> 60.dp
+        roomy -> 68.dp
+        compact -> 50.dp
+        else -> 58.dp
     }
     val gridSpacing = if (compact) 6.dp else ExpressiveWidgetTheme.GridSpacing
-    val topSpacing = if (compact) 12.dp else 16.dp
-    val bottomSpacing = if (compact) 10.dp else 14.dp
+    val topSpacing = if (compact) 10.dp else 14.dp
+    val bottomSpacing = if (compact) 8.dp else 12.dp
     val iconSize = if (compact) 34.dp else 40.dp
     val iconInnerSize = if (compact) 18.dp else 22.dp
+    val contentPadding = if (compact) 14.dp else ExpressiveWidgetTheme.ContentPadding
 
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
             .cornerRadius(ExpressiveWidgetTheme.OuterCornerRadius)
             .background(GlanceTheme.colors.widgetBackground)
-            .padding(ExpressiveWidgetTheme.ContentPadding),
+            .padding(contentPadding),
         contentAlignment = Alignment.Center,
     ) {
         Column(
             modifier = GlanceModifier.fillMaxSize(),
-            verticalAlignment = Alignment.Vertical.CenterVertically,
             horizontalAlignment = Alignment.Horizontal.Start,
         ) {
             Row(
@@ -168,7 +171,7 @@ private fun TicTacToeWidgetContent(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = if (uiState.isFinished) "Play again" else "Reset board",
+                    text = if (uiState.isFinished) "New round" else "Reset",
                     style = ExpressiveWidgetTheme.chipStyle(GlanceTheme.colors.onSecondaryContainer),
                 )
             }
