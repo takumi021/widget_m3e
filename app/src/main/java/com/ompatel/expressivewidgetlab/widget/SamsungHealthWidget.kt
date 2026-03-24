@@ -33,6 +33,7 @@ import androidx.glance.layout.width
 import androidx.glance.text.Text
 import androidx.glance.unit.ColorProvider
 import androidx.glance.state.PreferencesGlanceStateDefinition
+import com.ompatel.expressivewidgetlab.health.SamsungHealthRepository
 import com.ompatel.expressivewidgetlab.worker.SamsungHealthWidgetWorker
 
 class SamsungHealthWidget : GlanceAppWidget() {
@@ -77,7 +78,8 @@ private class RefreshSamsungHealthAction : ActionCallback {
         glanceId: GlanceId,
         parameters: ActionParameters,
     ) {
-        SamsungHealthWidgetWorker.enqueueImmediateRefresh(context)
+        val snapshot = SamsungHealthRepository(context).loadSnapshot()
+        SamsungHealthWidgetState.writeSnapshot(context, snapshot)
         SamsungHealthWidget().update(context, glanceId)
     }
 }

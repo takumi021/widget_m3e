@@ -8,6 +8,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.ompatel.expressivewidgetlab.health.SamsungHealthRepository
+import com.ompatel.expressivewidgetlab.widget.SamsungHealthWidget
+import com.ompatel.expressivewidgetlab.widget.SamsungHealthWidgetState
 import com.ompatel.expressivewidgetlab.worker.SamsungHealthWidgetWorker
 import com.ompatel.expressivewidgetlab.worker.WidgetUpdateWorker
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -47,7 +49,9 @@ class MainViewModel(
             val permissionState = samsungHealthRepository.ensureReadPermissions(activity)
 
             if (permissionState.isReady) {
-                SamsungHealthWidgetWorker.enqueueImmediateRefresh(getApplication())
+                val snapshot = samsungHealthRepository.loadSnapshot()
+                SamsungHealthWidgetState.writeSnapshot(getApplication(), snapshot)
+                SamsungHealthWidget.refreshAll(getApplication())
             }
 
             _uiState.value = _uiState.value.copy(
@@ -59,7 +63,9 @@ class MainViewModel(
 
     fun refreshSamsungHealth() {
         viewModelScope.launch {
-            SamsungHealthWidgetWorker.enqueueImmediateRefresh(getApplication())
+            val snapshot = samsungHealthRepository.loadSnapshot()
+            SamsungHealthWidgetState.writeSnapshot(getApplication(), snapshot)
+            SamsungHealthWidget.refreshAll(getApplication())
             _uiState.value = _uiState.value.copy(
                 samsungHealthMessage = "Refreshing Samsung Health widget data...",
             )

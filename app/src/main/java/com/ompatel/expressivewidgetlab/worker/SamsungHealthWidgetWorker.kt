@@ -35,7 +35,7 @@ class SamsungHealthWidgetWorker(
 
         fun ensureScheduled(context: Context) {
             val request = PeriodicWorkRequestBuilder<SamsungHealthWidgetWorker>(
-                repeatInterval = 30,
+                repeatInterval = 15,
                 repeatIntervalTimeUnit = TimeUnit.MINUTES,
             ).build()
 

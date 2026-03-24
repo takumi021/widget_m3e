@@ -12,6 +12,8 @@ import com.samsung.android.sdk.health.data.request.DataType
 import com.samsung.android.sdk.health.data.request.DataTypes
 import com.samsung.android.sdk.health.data.request.LocalDateFilter
 import com.samsung.android.sdk.health.data.request.LocalTimeFilter
+import com.samsung.android.sdk.health.data.request.LocalTimeGroup
+import com.samsung.android.sdk.health.data.request.LocalTimeGroupUnit
 import com.samsung.android.sdk.health.data.request.Ordering
 import java.time.Duration
 import java.time.LocalDate
@@ -112,9 +114,12 @@ class SamsungHealthRepository(
         val now = LocalDateTime.now()
         val startOfDay = now.toLocalDate().atStartOfDay()
         val request = DataType.StepsType.TOTAL.requestBuilder
-            .setLocalTimeFilter(LocalTimeFilter.of(startOfDay, now))
+            .setLocalTimeFilterWithGroup(
+                LocalTimeFilter.of(startOfDay, now),
+                LocalTimeGroup.of(LocalTimeGroupUnit.HOURLY, 1),
+            )
             .build()
-        val totalSteps = store.aggregateData(request).dataList.firstOrNull()?.value ?: 0L
+        val totalSteps = store.aggregateData(request).dataList.sumOf { it.value ?: 0L }
         return formatSteps(totalSteps)
     }
 
@@ -131,25 +136,26 @@ class SamsungHealthRepository(
     }
 
     private suspend fun readSleep(store: com.samsung.android.sdk.health.data.HealthDataStore): String {
-        val startDate = LocalDate.now().minusDays(2)
-        val endDate = LocalDate.now()
+        val today = LocalDate.now()
         val request = DataType.SleepType.TOTAL_DURATION.requestBuilder
-            .setLocalDateFilter(LocalDateFilter.of(startDate, endDate))
+            .setLocalDateFilter(LocalDateFilter.of(today, today))
             .build()
-        val duration = store.aggregateData(request).dataList.lastOrNull()?.value ?: return "--"
+        val duration = store.aggregateData(request).dataList.lastOrNull()?.value
+            ?: return "0h 00m"
         val hours = duration.toHours()
         val minutes = duration.minusHours(hours).toMinutes()
         return String.format(Locale.getDefault(), "%dh %02dm", hours, minutes)
     }
 
     private suspend fun readEnergyScore(store: com.samsung.android.sdk.health.data.HealthDataStore): String {
+        val today = LocalDate.now()
         val request = DataTypes.ENERGY_SCORE.readDataRequestBuilder
-            .setLocalDateFilter(LocalDateFilter.of(LocalDate.now().minusDays(7), LocalDate.now()))
+            .setLocalDateFilter(LocalDateFilter.of(today, today))
             .setOrdering(Ordering.DESC)
             .build()
-        val latest = store.readData(request).dataList.firstOrNull() ?: return "--"
-        val score = latest.getValue(DataType.EnergyScoreType.ENERGY_SCORE)
-        return score.toString()
+        val latest = store.readData(request).dataList.firstOrNull() ?: return "0"
+        val score = latest.getValue(DataType.EnergyScoreType.ENERGY_SCORE) ?: 0f
+        return score.toInt().toString()
     }
 
     private fun formatSteps(totalSteps: Long): String {
