@@ -89,9 +89,23 @@ private fun SamsungHealthWidgetContent(
     uiState: SamsungHealthWidgetUiState,
 ) {
     val widgetSize = LocalSize.current
-    val compact = widgetSize.width < 220.dp || widgetSize.height < 180.dp
-    val contentPadding = if (compact) 10.dp else 12.dp
-    val sectionGap = if (compact) 6.dp else 8.dp
+    val compact = widgetSize.width < 210.dp || widgetSize.height < 170.dp
+    val roomy = widgetSize.width >= 300.dp && widgetSize.height >= 230.dp
+    val metricSizeClass = when {
+        roomy -> ExpressiveWidgetTheme.HealthMetricSizeClass.Roomy
+        compact -> ExpressiveWidgetTheme.HealthMetricSizeClass.Compact
+        else -> ExpressiveWidgetTheme.HealthMetricSizeClass.Regular
+    }
+    val contentPadding = when {
+        roomy -> 14.dp
+        compact -> 8.dp
+        else -> 12.dp
+    }
+    val sectionGap = when {
+        roomy -> 10.dp
+        compact -> 4.dp
+        else -> 8.dp
+    }
     val showStatus = !uiState.isConnected
 
     Box(
@@ -106,39 +120,71 @@ private fun SamsungHealthWidgetContent(
             modifier = GlanceModifier.fillMaxSize(),
             verticalAlignment = Alignment.Vertical.CenterVertically,
         ) {
-            HealthMetricRow(
-                leading = MetricBlock(
-                    label = "Steps",
-                    value = uiState.steps,
-                    unit = "",
-                    tone = metricToneForSteps(uiState.steps),
-                ),
-                trailing = MetricBlock(
-                    label = "Heart",
-                    value = uiState.heartRate,
-                    unit = "bpm",
-                    tone = metricToneForHeart(uiState.heartRate),
-                ),
-                compact = compact,
-            )
+            if (compact) {
+                CompactHealthMetricColumn(
+                    metrics = listOf(
+                        MetricBlock(
+                            label = "Steps",
+                            value = uiState.steps,
+                            unit = "",
+                            tone = metricToneForSteps(uiState.steps),
+                        ),
+                        MetricBlock(
+                            label = "Heart",
+                            value = uiState.heartRate,
+                            unit = "bpm",
+                            tone = metricToneForHeart(uiState.heartRate),
+                        ),
+                        MetricBlock(
+                            label = "Sleep",
+                            value = uiState.sleep,
+                            unit = "",
+                            tone = metricToneForSleep(uiState.sleep),
+                        ),
+                        MetricBlock(
+                            label = "Energy",
+                            value = uiState.energyScore,
+                            unit = "",
+                            tone = metricToneForEnergy(uiState.energyScore),
+                        ),
+                    ),
+                    sizeClass = metricSizeClass,
+                )
+            } else {
+                HealthMetricRow(
+                    leading = MetricBlock(
+                        label = "Steps",
+                        value = uiState.steps,
+                        unit = "",
+                        tone = metricToneForSteps(uiState.steps),
+                    ),
+                    trailing = MetricBlock(
+                        label = "Heart",
+                        value = uiState.heartRate,
+                        unit = "bpm",
+                        tone = metricToneForHeart(uiState.heartRate),
+                    ),
+                    sizeClass = metricSizeClass,
+                )
 
-            Spacer(modifier = GlanceModifier.height(sectionGap))
+                Spacer(modifier = GlanceModifier.height(sectionGap))
 
-            HealthMetricRow(
-                leading = MetricBlock(
-                    label = "Sleep",
-                    value = uiState.sleep,
-                    unit = "",
-                    tone = metricToneForSleep(uiState.sleep),
-                ),
-                trailing = MetricBlock(
-                    label = "Energy",
-                    value = uiState.energyScore,
-                    unit = "",
-                    tone = metricToneForEnergy(uiState.energyScore),
-                ),
-                compact = compact,
-            )
+                HealthMetricRow(
+                    leading = MetricBlock(
+                        label = "Sleep",
+                        value = uiState.sleep,
+                        unit = "",
+                        tone = metricToneForSleep(uiState.sleep),
+                    ),
+                    trailing = MetricBlock(
+                        label = "Energy",
+                        value = uiState.energyScore,
+                        unit = "",
+                        tone = metricToneForEnergy(uiState.energyScore),
+                    ),
+                    sizeClass = metricSizeClass,
+                )
+            }
 
             if (showStatus) {
                 Spacer(modifier = GlanceModifier.height(sectionGap))
@@ -166,7 +212,7 @@ private fun SamsungHealthWidgetContent(
 private fun HealthMetricRow(
     leading: MetricBlock,
     trailing: MetricBlock,
-    compact: Boolean,
+    sizeClass: ExpressiveWidgetTheme.HealthMetricSizeClass,
 ) {
     Row(
         modifier = GlanceModifier.fillMaxWidth(),
@@ -174,14 +220,35 @@ private fun HealthMetricRow(
         MetricCard(
             modifier = GlanceModifier.defaultWeight(),
             metric = leading,
-            compact = compact,
+            sizeClass = sizeClass,
         )
         Spacer(modifier = GlanceModifier.width(8.dp))
         MetricCard(
             modifier = GlanceModifier.defaultWeight(),
             metric = trailing,
-            compact = compact,
+            sizeClass = sizeClass,
         )
+    }
+}
+
+@Composable
+private fun CompactHealthMetricColumn(
+    metrics: List<MetricBlock>,
+    sizeClass: ExpressiveWidgetTheme.HealthMetricSizeClass,
+) {
+    Column(
+        modifier = GlanceModifier.fillMaxWidth(),
+    ) {
+        metrics.forEachIndexed { index, metric ->
+            MetricCard(
+                modifier = GlanceModifier.fillMaxWidth(),
+                metric = metric,
+                sizeClass = sizeClass,
+            )
+            if (index != metrics.lastIndex) {
+                Spacer(modifier = GlanceModifier.height(4.dp))
+            }
+        }
     }
 }
 
@@ -189,13 +256,20 @@ private fun HealthMetricRow(
 private fun MetricCard(
     modifier: GlanceModifier,
     metric: MetricBlock,
-    compact: Boolean,
+    sizeClass: ExpressiveWidgetTheme.HealthMetricSizeClass,
 ) {
     Box(
         modifier = modifier
             .cornerRadius(ExpressiveWidgetTheme.InnerCornerRadius)
             .background(metric.tone.container)
-            .padding(horizontal = 10.dp, vertical = if (compact) 8.dp else 10.dp),
+            .padding(
+                horizontal = if (sizeClass == ExpressiveWidgetTheme.HealthMetricSizeClass.Roomy) 12.dp else 10.dp,
+                vertical = when (sizeClass) {
+                    ExpressiveWidgetTheme.HealthMetricSizeClass.Compact -> 6.dp
+                    ExpressiveWidgetTheme.HealthMetricSizeClass.Regular -> 9.dp
+                    ExpressiveWidgetTheme.HealthMetricSizeClass.Roomy -> 12.dp
+                },
+            ),
     ) {
         Column {
             Text(
@@ -211,7 +285,7 @@ private fun MetricCard(
                 Text(
                     text = metric.value,
                     style = ExpressiveWidgetTheme.healthMetricValueStyle(
-                        compact = compact,
+                        sizeClass = sizeClass,
                         color = metric.tone.onContainer,
                     ),
                 )
