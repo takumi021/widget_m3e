@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Expressive Widget Lab</string>
+    <string name="expressive_clock_widget_name">Expressive Clock Widget</string>
+    <string name="expressive_clock_widget_description">A modern Glance clock widget with expressive Material 3 styling.</string>
+    <string name="widget_loading">Loading clock...</string>
 </resources>

@@ -56,8 +56,8 @@ class MainActivity : ComponentActivity() {
 
                     HomeScreen(
                         uiState = uiState,
-                        onRefreshClick = viewModel::primaryAction,
-                        onScheduleClick = viewModel::secondaryAction,
+                        onRefreshClick = viewModel::refreshWidgets,
+                        onScheduleClick = viewModel::ensureSchedule,
                     )
                 }
             }
@@ -160,7 +160,7 @@ private fun HomeScreen(
                                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
                             )
                             Text(
-                                text = "This host app is ready for expressive widgets, theme experiments, and Compose-first surfaces.",
+                                text = "The widget refreshes every 15 minutes with WorkManager and can be forced instantly by tapping the widget body.",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                             )
@@ -218,7 +218,7 @@ private fun HomeScreenPreview() {
     ExpressiveWidgetLabTheme(dynamicColor = false) {
         HomeScreen(
             uiState = HomeUiState(
-                statusMessage = "The expressive host surface is ready for widget integrations.",
+                statusMessage = "Widgets are scheduled and ready to refresh every 15 minutes.",
                 isRefreshing = false,
             ),
             onRefreshClick = {},
