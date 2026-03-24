@@ -6,3 +6,7 @@ captures/
 local.properties
 *.iml
 app/build/
+app/libs/*.aar
+app/libs/*.zip
+app/libs/*.tar
+app/libs/*.gz
