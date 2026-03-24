@@ -111,9 +111,9 @@ object ExpressiveWidgetTheme {
         fontWeight = FontWeight.Bold,
     )
 
-    fun healthMetricValueStyle(color: ColorProvider) = TextStyle(
+    fun healthMetricValueStyle(compact: Boolean, color: ColorProvider) = TextStyle(
         color = color,
-        fontSize = 20.sp,
+        fontSize = if (compact) 18.sp else 22.sp,
         fontWeight = FontWeight.Bold,
     )
 

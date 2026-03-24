@@ -22,8 +22,9 @@ data class SamsungHealthMetricSnapshot(
     val steps: String,
     val heartRate: String,
     val sleep: String,
-    val stress: String,
+    val energyScore: String,
     val status: String,
+    val isConnected: Boolean,
 )
 
 data class SamsungHealthPermissionState(
@@ -82,51 +83,28 @@ class SamsungHealthRepository(
 
     suspend fun loadSnapshot(): SamsungHealthMetricSnapshot {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            return SamsungHealthMetricSnapshot(
-                steps = "--",
-                heartRate = "--",
-                sleep = "--",
-                stress = "N/A",
-                status = "Requires Android 10+.",
-            )
+            return unavailableSnapshot("Requires Android 10+.")
         }
 
         return try {
             val store = HealthDataService.getStore(context)
             val granted = store.getGrantedPermissions(requiredPermissions)
             if (!granted.containsAll(requiredPermissions)) {
-                return SamsungHealthMetricSnapshot(
-                    steps = "--",
-                    heartRate = "--",
-                    sleep = "--",
-                    stress = "N/A",
-                    status = "Open the app and connect Samsung Health.",
-                )
+                return unavailableSnapshot("Open the app and connect Samsung Health.")
             }
 
             SamsungHealthMetricSnapshot(
                 steps = readSteps(store),
                 heartRate = readHeartRate(store),
                 sleep = readSleep(store),
-                stress = "N/A",
-                status = "Tap to refresh Samsung Health data.",
+                energyScore = readEnergyScore(store),
+                status = "Connected",
+                isConnected = true,
             )
         } catch (error: HealthDataException) {
-            SamsungHealthMetricSnapshot(
-                steps = "--",
-                heartRate = "--",
-                sleep = "--",
-                stress = "N/A",
-                status = error.errorMessage.ifBlank { "Samsung Health read failed." },
-            )
+            unavailableSnapshot(error.errorMessage.ifBlank { "Samsung Health read failed." })
         } catch (_: Throwable) {
-            SamsungHealthMetricSnapshot(
-                steps = "--",
-                heartRate = "--",
-                sleep = "--",
-                stress = "N/A",
-                status = "Samsung Health read failed.",
-            )
+            unavailableSnapshot("Samsung Health read failed.")
         }
     }
 
@@ -137,7 +115,7 @@ class SamsungHealthRepository(
             .setLocalTimeFilter(LocalTimeFilter.of(startOfDay, now))
             .build()
         val totalSteps = store.aggregateData(request).dataList.firstOrNull()?.value ?: 0L
-        return totalSteps.toString()
+        return formatSteps(totalSteps)
     }
 
     private suspend fun readHeartRate(store: com.samsung.android.sdk.health.data.HealthDataStore): String {
@@ -149,7 +127,7 @@ class SamsungHealthRepository(
             .build()
         val latest = store.readData(request).dataList.firstOrNull()
         val bpm = latest?.getValue(DataType.HeartRateType.HEART_RATE) ?: return "--"
-        return "${bpm.toInt()} bpm"
+        return bpm.toInt().toString()
     }
 
     private suspend fun readSleep(store: com.samsung.android.sdk.health.data.HealthDataStore): String {
@@ -164,11 +142,41 @@ class SamsungHealthRepository(
         return String.format(Locale.getDefault(), "%dh %02dm", hours, minutes)
     }
 
+    private suspend fun readEnergyScore(store: com.samsung.android.sdk.health.data.HealthDataStore): String {
+        val request = DataTypes.ENERGY_SCORE.readDataRequestBuilder
+            .setLocalDateFilter(LocalDateFilter.of(LocalDate.now().minusDays(7), LocalDate.now()))
+            .setOrdering(Ordering.DESC)
+            .build()
+        val latest = store.readData(request).dataList.firstOrNull() ?: return "--"
+        val score = latest.getValue(DataType.EnergyScoreType.ENERGY_SCORE)
+        return score.toString()
+    }
+
+    private fun formatSteps(totalSteps: Long): String {
+        return when {
+            totalSteps >= 10_000 -> String.format(Locale.getDefault(), "%.1fk", totalSteps / 1000f)
+            totalSteps >= 1_000 -> String.format(Locale.getDefault(), "%.1fk", totalSteps / 1000f)
+            else -> totalSteps.toString()
+        }
+    }
+
+    private fun unavailableSnapshot(message: String): SamsungHealthMetricSnapshot {
+        return SamsungHealthMetricSnapshot(
+            steps = "--",
+            heartRate = "--",
+            sleep = "--",
+            energyScore = "--",
+            status = message,
+            isConnected = false,
+        )
+    }
+
     private companion object {
         val requiredPermissions = setOf(
             Permission.of(DataTypes.STEPS, AccessType.READ),
             Permission.of(DataTypes.HEART_RATE, AccessType.READ),
             Permission.of(DataTypes.SLEEP, AccessType.READ),
+            Permission.of(DataTypes.ENERGY_SCORE, AccessType.READ),
         )
     }
 }
