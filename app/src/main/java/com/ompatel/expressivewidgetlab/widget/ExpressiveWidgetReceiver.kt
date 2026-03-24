@@ -10,7 +10,7 @@ class ExpressiveWidgetReceiver : GlanceAppWidgetReceiver() {
 
     override fun onEnabled(context: Context) {
         super.onEnabled(context)
-        WidgetUpdateWorker.enqueuePeriodicWork(context)
+        WidgetUpdateWorker.ensureClockSchedules(context)
         WidgetUpdateWorker.enqueueImmediateRefresh(context, WidgetRefreshSource.RECEIVER)
     }
 
@@ -20,11 +20,12 @@ class ExpressiveWidgetReceiver : GlanceAppWidgetReceiver() {
         appWidgetIds: IntArray,
     ) {
         super.onUpdate(context, appWidgetManager, appWidgetIds)
-        WidgetUpdateWorker.enqueuePeriodicWork(context)
+        WidgetUpdateWorker.ensureClockSchedules(context)
+        WidgetUpdateWorker.enqueueImmediateRefresh(context, WidgetRefreshSource.RECEIVER)
     }
 
     override fun onDisabled(context: Context) {
         super.onDisabled(context)
-        WidgetUpdateWorker.cancelPeriodicWork(context)
+        WidgetUpdateWorker.cancelClockSchedules(context)
     }
 }

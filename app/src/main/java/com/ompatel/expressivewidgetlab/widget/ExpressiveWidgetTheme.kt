@@ -1,8 +1,11 @@
 package com.ompatel.expressivewidgetlab.widget
 
+import android.os.Build
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.glance.GlanceTheme
 import androidx.glance.color.ColorProviders
 import androidx.glance.color.colorProviders
 import androidx.glance.text.FontWeight
@@ -11,8 +14,10 @@ import androidx.glance.unit.ColorProvider
 
 object ExpressiveWidgetTheme {
     val OuterCornerRadius = 30.dp
+    val InnerCornerRadius = 18.dp
     val ContentPadding = 18.dp
     val ComfortableSpacing = 12.dp
+    val GridSpacing = 8.dp
 
     fun fallbackColors(): ColorProviders = colorProviders(
         primary = androidx.glance.color.ColorProvider(day = Color(0xFF3A57C4), night = Color(0xFFBAC3FF)),
@@ -73,4 +78,13 @@ object ExpressiveWidgetTheme {
         fontSize = 11.sp,
         fontWeight = FontWeight.Bold,
     )
+
+    @Composable
+    fun GlanceSurface(content: @Composable () -> Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            GlanceTheme(content = content)
+        } else {
+            GlanceTheme(colors = fallbackColors(), content = content)
+        }
+    }
 }

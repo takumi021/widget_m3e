@@ -3,5 +3,8 @@
     <string name="app_name">Expressive Widget Lab</string>
     <string name="expressive_clock_widget_name">Expressive Clock Widget</string>
     <string name="expressive_clock_widget_description">A modern Glance clock widget with expressive Material 3 styling.</string>
+    <string name="tic_tac_toe_widget_name">Expressive Tic-Tac-Toe</string>
+    <string name="tic_tac_toe_widget_description">A compact Glance tic-tac-toe widget with tap-to-play cells.</string>
     <string name="widget_loading">Loading clock...</string>
+    <string name="tic_tac_toe_loading">Loading game...</string>
 </resources>

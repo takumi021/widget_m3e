@@ -22,6 +22,7 @@ enum class WidgetRefreshSource(
     PERIODIC("periodic", "Auto"),
     TAP("tap", "Tap"),
     RECEIVER("receiver", "Place"),
+    SYSTEM("system", "Live"),
     APP("app", "App");
 
     companion object {

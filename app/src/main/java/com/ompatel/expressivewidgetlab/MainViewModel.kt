@@ -31,9 +31,9 @@ class MainViewModel(
     }
 
     fun ensureSchedule() {
-        WidgetUpdateWorker.enqueuePeriodicWork(getApplication())
+        WidgetUpdateWorker.ensureClockSchedules(getApplication())
         _uiState.value = _uiState.value.copy(
-            statusMessage = "Periodic widget updates are scheduled with WorkManager every 15 minutes.",
+            statusMessage = "Clock schedules are active and the widget now requests minute-aligned refreshes.",
         )
     }
 

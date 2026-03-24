@@ -1,7 +1,8 @@
 package com.ompatel.expressivewidgetlab.widget
 
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
-import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.datastore.preferences.core.Preferences
@@ -45,7 +46,7 @@ class ExpressiveClockWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         provideContent {
-            WidgetTheme {
+            ExpressiveWidgetTheme.GlanceSurface {
                 val preferences = currentState<Preferences>()
                 val uiState = ExpressiveWidgetState.snapshot(preferences)
                 ExpressiveClockWidgetContent(uiState)
@@ -60,6 +61,12 @@ class ExpressiveClockWidget : GlanceAppWidget() {
         ) {
             ExpressiveWidgetState.markAllWidgetsRefreshed(context, source)
             ExpressiveClockWidget().updateAll(context)
+        }
+
+        fun hasInstances(context: Context): Boolean {
+            return AppWidgetManager.getInstance(context)
+                .getAppWidgetIds(ComponentName(context, ExpressiveWidgetReceiver::class.java))
+                .isNotEmpty()
         }
     }
 }
@@ -76,15 +83,6 @@ private class RefreshClockAction : ActionCallback {
             source = WidgetRefreshSource.TAP,
         )
         ExpressiveClockWidget().update(context, glanceId)
-    }
-}
-
-@Composable
-private fun WidgetTheme(content: @Composable () -> Unit) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        GlanceTheme(content = content)
-    } else {
-        GlanceTheme(colors = ExpressiveWidgetTheme.fallbackColors(), content = content)
     }
 }
 

@@ -5,7 +5,7 @@ Production-ready Android Studio sample showing a modern home screen widget built
 ## Stack
 
 - Kotlin
-- Android Gradle Plugin 9.1.0
+- Android Gradle Plugin 9.0.0
 - Gradle 9.3.1
 - Compose BOM 2026.02.01
 - Glance 1.1.1
