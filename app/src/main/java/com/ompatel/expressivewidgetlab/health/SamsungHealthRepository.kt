@@ -160,6 +160,7 @@ class SamsungHealthRepository(
             .build()
         val latestSession = store.readData(request).dataList
             .asSequence()
+            .filter { point -> !point.dataSource?.deviceId.isNullOrBlank() }
             .mapNotNull { point ->
                 point.getValue(DataType.SleepType.SESSIONS)
                     ?.filter { session -> isTrackedSleepSession(session) }
