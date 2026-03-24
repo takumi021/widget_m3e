@@ -17,6 +17,7 @@ object ExpressiveWidgetTheme {
         Compact,
         Regular,
         Large,
+        Wide,
     }
 
     val OuterCornerRadius = 30.dp
@@ -66,20 +67,29 @@ object ExpressiveWidgetTheme {
         fontSize = when (sizeClass) {
             ClockSizeClass.Compact -> 26.sp
             ClockSizeClass.Regular -> 30.sp
-            ClockSizeClass.Large -> 36.sp
+            ClockSizeClass.Large -> 38.sp
+            ClockSizeClass.Wide -> 46.sp
         },
         fontWeight = FontWeight.Bold,
     )
 
-    fun meridiemStyle(compact: Boolean, color: ColorProvider) = TextStyle(
+    fun meridiemStyle(compact: Boolean, roomy: Boolean, color: ColorProvider) = TextStyle(
         color = color,
-        fontSize = if (compact) 12.sp else 14.sp,
+        fontSize = when {
+            compact -> 12.sp
+            roomy -> 18.sp
+            else -> 14.sp
+        },
         fontWeight = FontWeight.Medium,
     )
 
-    fun dateStyle(compact: Boolean, color: ColorProvider) = TextStyle(
+    fun dateStyle(compact: Boolean, roomy: Boolean, color: ColorProvider) = TextStyle(
         color = color,
-        fontSize = if (compact) 12.sp else 14.sp,
+        fontSize = when {
+            compact -> 12.sp
+            roomy -> 16.sp
+            else -> 14.sp
+        },
         fontWeight = FontWeight.Medium,
     )
 

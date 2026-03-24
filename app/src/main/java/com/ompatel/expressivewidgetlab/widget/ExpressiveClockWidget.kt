@@ -30,7 +30,6 @@ import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
-import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
@@ -92,19 +91,25 @@ private fun ExpressiveClockWidgetContent(
 ) {
     val widgetSize = LocalSize.current
     val compact = widgetSize.width < 180.dp || widgetSize.height < 130.dp
-    val roomy = widgetSize.width >= 260.dp && widgetSize.height >= 180.dp
-    val horizontalLayout = widgetSize.width >= 300.dp && widgetSize.height >= 150.dp
+    val roomy = widgetSize.width >= 250.dp && widgetSize.height >= 160.dp
+    val wide = widgetSize.width >= 300.dp
     val iconSize = when {
+        wide -> 48.dp
         roomy -> 44.dp
         compact -> 32.dp
         else -> 40.dp
     }
     val iconInnerSize = when {
+        wide -> 26.dp
         roomy -> 24.dp
         compact -> 18.dp
         else -> 22.dp
     }
-    val topSpacing = if (compact) 12.dp else 18.dp
+    val topSpacing = when {
+        wide -> 22.dp
+        compact -> 12.dp
+        else -> 18.dp
+    }
     val dateSpacing = if (compact) 10.dp else 14.dp
     val titleSpacing = if (compact) 8.dp else ExpressiveWidgetTheme.ComfortableSpacing
     val contentPadding = if (compact) 14.dp else ExpressiveWidgetTheme.ContentPadding
@@ -119,12 +124,9 @@ private fun ExpressiveClockWidgetContent(
         contentAlignment = Alignment.Center,
     ) {
         Column(
-            modifier = GlanceModifier.fillMaxSize(),
-            verticalAlignment = Alignment.Vertical.CenterVertically,
-            horizontalAlignment = Alignment.Horizontal.Start,
+            horizontalAlignment = Alignment.Horizontal.CenterHorizontally,
         ) {
             Row(
-                modifier = GlanceModifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Vertical.CenterVertically,
             ) {
                 Box(
@@ -154,44 +156,23 @@ private fun ExpressiveClockWidgetContent(
 
             Spacer(modifier = GlanceModifier.height(topSpacing))
 
-            if (horizontalLayout) {
-                Row(
-                    modifier = GlanceModifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.Vertical.CenterVertically,
-                ) {
-                    TimeRow(
-                        uiState = uiState,
-                        compact = compact,
-                        roomy = roomy,
-                    )
+            TimeRow(
+                uiState = uiState,
+                compact = compact,
+                roomy = roomy,
+                wide = wide,
+            )
 
-                    Spacer(modifier = GlanceModifier.width(16.dp))
+            Spacer(modifier = GlanceModifier.height(dateSpacing))
 
-                    Text(
-                        text = uiState.dateText,
-                        style = ExpressiveWidgetTheme.dateStyle(
-                            compact = compact,
-                            color = GlanceTheme.colors.onSurfaceVariant,
-                        ),
-                    )
-                }
-            } else {
-                TimeRow(
-                    uiState = uiState,
+            Text(
+                text = uiState.dateText,
+                style = ExpressiveWidgetTheme.dateStyle(
                     compact = compact,
-                    roomy = roomy,
-                )
-
-                Spacer(modifier = GlanceModifier.height(dateSpacing))
-
-                Text(
-                    text = uiState.dateText,
-                    style = ExpressiveWidgetTheme.dateStyle(
-                        compact = compact,
-                        color = GlanceTheme.colors.onSurfaceVariant,
-                    ),
-                )
-            }
+                    roomy = roomy || wide,
+                    color = GlanceTheme.colors.onSurfaceVariant,
+                ),
+            )
         }
     }
 }
@@ -201,6 +182,7 @@ private fun TimeRow(
     uiState: ExpressiveWidgetUiState,
     compact: Boolean,
     roomy: Boolean,
+    wide: Boolean,
 ) {
     Row(
         verticalAlignment = Alignment.Vertical.Bottom,
@@ -209,6 +191,7 @@ private fun TimeRow(
             text = uiState.timeText,
             style = ExpressiveWidgetTheme.timeStyle(
                 sizeClass = when {
+                    wide -> ExpressiveWidgetTheme.ClockSizeClass.Wide
                     roomy -> ExpressiveWidgetTheme.ClockSizeClass.Large
                     compact -> ExpressiveWidgetTheme.ClockSizeClass.Compact
                     else -> ExpressiveWidgetTheme.ClockSizeClass.Regular
@@ -217,12 +200,13 @@ private fun TimeRow(
             ),
         )
 
-        Spacer(modifier = GlanceModifier.width(if (compact) 6.dp else 8.dp))
+        Spacer(modifier = GlanceModifier.width(if (compact) 6.dp else 10.dp))
 
         Text(
             text = uiState.meridiemText,
             style = ExpressiveWidgetTheme.meridiemStyle(
                 compact = compact,
+                roomy = roomy || wide,
                 color = GlanceTheme.colors.primary,
             ),
         )
