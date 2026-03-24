@@ -105,6 +105,17 @@ object ExpressiveWidgetTheme {
         fontWeight = FontWeight.Medium,
     )
 
+    fun healthMetricLabelStyle(sizeClass: HealthMetricSizeClass, color: ColorProvider) = TextStyle(
+        color = color,
+        fontSize = when (sizeClass) {
+            HealthMetricSizeClass.Dense -> 9.sp
+            HealthMetricSizeClass.Compact -> 10.sp
+            HealthMetricSizeClass.Regular -> 11.sp
+            HealthMetricSizeClass.Roomy -> 12.sp
+        },
+        fontWeight = FontWeight.Medium,
+    )
+
     fun boardCellStyle(large: Boolean, color: ColorProvider) = TextStyle(
         color = color,
         fontSize = if (large) 28.sp else 22.sp,
@@ -114,6 +125,7 @@ object ExpressiveWidgetTheme {
     fun healthMetricValueStyle(sizeClass: HealthMetricSizeClass, color: ColorProvider) = TextStyle(
         color = color,
         fontSize = when (sizeClass) {
+            HealthMetricSizeClass.Dense -> 14.sp
             HealthMetricSizeClass.Compact -> 16.sp
             HealthMetricSizeClass.Regular -> 20.sp
             HealthMetricSizeClass.Roomy -> 24.sp
@@ -122,6 +134,7 @@ object ExpressiveWidgetTheme {
     )
 
     enum class HealthMetricSizeClass {
+        Dense,
         Compact,
         Regular,
         Roomy,
