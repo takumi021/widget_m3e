@@ -98,7 +98,7 @@ class SamsungHealthRepository(
 
             val steps = runCatching { readSteps(store) }.getOrDefault("--")
             val heartRate = runCatching { readHeartRate(store) }.getOrDefault("--")
-            val sleep = runCatching { readLatestSleep(store) }.getOrDefault("--")
+            val sleep = runCatching { readDailySleep(store) }.getOrDefault("--")
             val energyScore = if (granted.contains(energyScorePermission)) {
                 runCatching { readEnergyScore(store) }.getOrDefault("--")
             } else {
@@ -151,25 +151,29 @@ class SamsungHealthRepository(
         return bpm.toInt().toString()
     }
 
-    private suspend fun readLatestSleep(store: com.samsung.android.sdk.health.data.HealthDataStore): String {
+    private suspend fun readDailySleep(store: com.samsung.android.sdk.health.data.HealthDataStore): String {
         val now = LocalDateTime.now()
-        val start = now.minusDays(3)
+        // Filter from 00:00 today to show only "new" readings
+        val startOfDay = now.toLocalDate().atStartOfDay()
+        
         val request = DataTypes.SLEEP.readDataRequestBuilder
-            .setLocalTimeFilter(LocalTimeFilter.of(start, now))
+            .setLocalTimeFilter(LocalTimeFilter.of(startOfDay, now))
             .setOrdering(Ordering.DESC)
             .build()
-        val latestSession = store.readData(request).dataList
-            .asSequence()
-            .filter { point -> !point.dataSource?.deviceId.isNullOrBlank() }
-            .mapNotNull { point ->
-                point.getValue(DataType.SleepType.SESSIONS)
-                    ?.filter { session -> isTrackedSleepSession(session) }
-                    ?.maxByOrNull { session -> session.endTime }
-            }
-            .firstOrNull() ?: return "--"
-        val duration = latestSession.duration
-        val hours = duration.toHours()
-        val minutes = duration.minusHours(hours).toMinutes()
+
+        val dataList = store.readData(request).dataList
+        
+        val totalDuration = dataList
+            .flatMap { point -> point.getValue(DataType.SleepType.SESSIONS) ?: emptyList() }
+            .filter { session -> isValidSleepSession(session) }
+            .distinctBy { it.startTime.toString() + it.endTime.toString() }
+            .fold(Duration.ZERO) { acc, session -> acc.plus(session.duration) }
+
+        // If no data is found for today, return "--" as requested
+        if (totalDuration.isZero) return "--"
+
+        val hours = totalDuration.toHours()
+        val minutes = totalDuration.minusHours(hours).toMinutes()
         return String.format(Locale.getDefault(), "%dh %02dm", hours, minutes)
     }
 
@@ -193,11 +197,9 @@ class SamsungHealthRepository(
         }
     }
 
-    private fun isTrackedSleepSession(session: SleepSession): Boolean {
-        if (session.duration.isZero || session.duration.isNegative) {
-            return false
-        }
-        return !session.stages.isNullOrEmpty()
+    private fun isValidSleepSession(session: SleepSession): Boolean {
+        if (session.duration.isZero || session.duration.isNegative) return false
+        return session.duration.toMinutes() > 5
     }
 
     private fun unavailableSnapshot(message: String): SamsungHealthMetricSnapshot {
