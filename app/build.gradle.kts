@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("org.jetbrains.kotlin.plugin.parcelize")
 }
 
 android {
@@ -70,6 +71,7 @@ dependencies {
     implementation("androidx.glance:glance-material3:1.1.1")
 
     implementation("androidx.work:work-runtime-ktx:2.10.5")
+    implementation("com.google.code.gson:gson:2.13.2")
     implementation(samsungHealthSdk)
 
     debugImplementation("androidx.compose.ui:ui-tooling")
