@@ -332,9 +332,7 @@ private fun HealthMetricRow(
     layout: HealthWidgetLayoutSpec,
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .fillMaxHeight(),
+        modifier = modifier.fillMaxWidth(),
     ) {
         MetricCard(
             modifier = GlanceModifier

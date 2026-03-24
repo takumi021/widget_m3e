@@ -122,22 +122,20 @@ class SamsungHealthRepository(
     private suspend fun readSteps(store: com.samsung.android.sdk.health.data.HealthDataStore): String {
         val now = LocalDateTime.now()
         val startOfDay = now.toLocalDate().atStartOfDay()
-        val aggregateRequest = DataType.StepsType.TOTAL.requestBuilder
+        val directRequest = DataType.StepsType.TOTAL.requestBuilder
+            .setLocalTimeFilter(LocalTimeFilter.of(startOfDay, now))
+            .build()
+        val directSteps = store.aggregateData(directRequest).dataList.firstOrNull()?.value ?: 0L
+
+        val groupedRequest = DataType.StepsType.TOTAL.requestBuilder
             .setLocalTimeFilterWithGroup(
                 LocalTimeFilter.of(startOfDay, now),
                 LocalTimeGroup.of(LocalTimeGroupUnit.HOURLY, 1),
             )
             .build()
-        val totalSteps = store.aggregateData(aggregateRequest).dataList.sumOf { it.value ?: 0L }
-        if (totalSteps > 0L) {
-            return formatSteps(totalSteps)
-        }
+        val groupedSteps = store.aggregateData(groupedRequest).dataList.sumOf { it.value ?: 0L }
 
-        val fallbackRequest = DataType.StepsType.TOTAL.requestBuilder
-            .setLocalTimeFilter(LocalTimeFilter.of(startOfDay, now))
-            .build()
-        val fallbackSteps = store.aggregateData(fallbackRequest).dataList.firstOrNull()?.value ?: 0L
-        return formatSteps(fallbackSteps)
+        return formatSteps(maxOf(directSteps, groupedSteps))
     }
 
     private suspend fun readHeartRate(store: com.samsung.android.sdk.health.data.HealthDataStore): String {
