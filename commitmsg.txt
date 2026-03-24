@@ -1,0 +1,10 @@
+refactor: remove stale refresh messaging from clock surfaces
+
+Replace the host app's refresh and scheduling controls with neutral widget
+status copy so the app no longer exposes internal update mechanics.
+
+Simplify the clock widget presentation by removing the last-updated label and
+refresh-source chip, keeping the surface focused on time and date.
+
+Preserve the existing scheduling logic under the hood and verify the cleanup
+with :app:compileDebugKotlin.

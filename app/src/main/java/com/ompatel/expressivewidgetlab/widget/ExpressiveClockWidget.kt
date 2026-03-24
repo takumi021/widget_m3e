@@ -132,10 +132,6 @@ private fun ExpressiveClockWidgetContent(
                         text = "Expressive Clock",
                         style = ExpressiveWidgetTheme.labelStyle(GlanceTheme.colors.onSurface),
                     )
-                    Text(
-                        text = uiState.lastUpdatedText,
-                        style = ExpressiveWidgetTheme.labelStyle(GlanceTheme.colors.onSurfaceVariant),
-                    )
                 }
             }
 
@@ -170,23 +166,6 @@ private fun ExpressiveClockWidgetContent(
                     color = GlanceTheme.colors.onSurfaceVariant,
                 ),
             )
-
-            Spacer(modifier = GlanceModifier.height(10.dp))
-
-            Box(
-                modifier = GlanceModifier
-                    .cornerRadius(999.dp)
-                    .background(GlanceTheme.colors.secondaryContainer)
-                    .padding(horizontal = 10.dp, vertical = 6.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = uiState.refreshSourceLabel,
-                    style = ExpressiveWidgetTheme.chipStyle(
-                        color = GlanceTheme.colors.onSecondaryContainer,
-                    ),
-                )
-            }
         }
     }
 }

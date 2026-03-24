@@ -16,15 +16,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.material.icons.rounded.Games
 import androidx.compose.material.icons.rounded.Widgets
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -56,8 +54,6 @@ class MainActivity : ComponentActivity() {
 
                     HomeScreen(
                         uiState = uiState,
-                        onRefreshClick = viewModel::refreshWidgets,
-                        onScheduleClick = viewModel::ensureSchedule,
                     )
                 }
             }
@@ -68,8 +64,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun HomeScreen(
     uiState: HomeUiState,
-    onRefreshClick: () -> Unit,
-    onScheduleClick: () -> Unit,
 ) {
     val gradient = Brush.verticalGradient(
         colors = listOf(
@@ -109,7 +103,7 @@ private fun HomeScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         Text(
-                            text = "Widget lifecycle",
+                            text = "Widget status",
                             style = MaterialTheme.typography.titleLarge,
                         )
                         Text(
@@ -117,26 +111,6 @@ private fun HomeScreen(
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        ) {
-                            FilledTonalButton(
-                                modifier = Modifier.weight(1f),
-                                onClick = onRefreshClick,
-                                enabled = !uiState.isRefreshing,
-                            ) {
-                                Text(if (uiState.isRefreshing) "Refreshing..." else "Refresh widget")
-                            }
-
-                            OutlinedButton(
-                                modifier = Modifier.weight(1f),
-                                onClick = onScheduleClick,
-                            ) {
-                                Text("Ensure schedule")
-                            }
-                        }
                     }
                 }
 
@@ -155,12 +129,12 @@ private fun HomeScreen(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             Icon(
-                                imageVector = Icons.Rounded.Schedule,
+                                imageVector = Icons.Rounded.Games,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
                             )
                             Text(
-                                text = "The widget refreshes every 15 minutes with WorkManager and can be forced instantly by tapping the widget body.",
+                                text = "Add Expressive Clock and Tic-Tac-Toe from the home screen widget picker for the cleanest experience.",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                             )
@@ -204,7 +178,7 @@ private fun HeaderCard() {
             )
 
             Text(
-                text = "A Compose-first host app for a Jetpack Glance clock widget with dynamic color, expressive spacing, and a clean MVVM workflow.",
+                text = "A Compose-first host app for expressive Glance widgets with dynamic color, clean typography, and a minimal Material 3 surface.",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -218,11 +192,8 @@ private fun HomeScreenPreview() {
     ExpressiveWidgetLabTheme(dynamicColor = false) {
         HomeScreen(
             uiState = HomeUiState(
-                statusMessage = "Widgets are scheduled and ready to refresh every 15 minutes.",
-                isRefreshing = false,
+                statusMessage = "The clock follows your device time automatically, and both widgets are ready from the home screen picker.",
             ),
-            onRefreshClick = {},
-            onScheduleClick = {},
         )
     }
 }

@@ -17,13 +17,12 @@ import java.util.Locale
 
 enum class WidgetRefreshSource(
     val storageValue: String,
-    val label: String,
 ) {
-    PERIODIC("periodic", "Auto"),
-    TAP("tap", "Tap"),
-    RECEIVER("receiver", "Place"),
-    SYSTEM("system", "Live"),
-    APP("app", "App");
+    PERIODIC("periodic"),
+    TAP("tap"),
+    RECEIVER("receiver"),
+    SYSTEM("system"),
+    APP("app");
 
     companion object {
         fun fromStorage(value: String?): WidgetRefreshSource {
@@ -36,8 +35,6 @@ data class ExpressiveWidgetUiState(
     val timeText: String,
     val meridiemText: String,
     val dateText: String,
-    val lastUpdatedText: String,
-    val refreshSourceLabel: String,
 )
 
 object ExpressiveWidgetState {
@@ -46,7 +43,6 @@ object ExpressiveWidgetState {
     private val timeFormatter = DateTimeFormatter.ofPattern("h:mm", Locale.getDefault())
     private val meridiemFormatter = DateTimeFormatter.ofPattern("a", Locale.getDefault())
     private val dateFormatter = DateTimeFormatter.ofPattern("EEE, MMM d", Locale.getDefault())
-    private val shortTimeFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault())
 
     suspend fun markWidgetRefreshed(
         context: Context,
@@ -77,23 +73,18 @@ object ExpressiveWidgetState {
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun snapshot(
         preferences: Preferences,
         clock: Clock = Clock.systemDefaultZone(),
         zoneId: ZoneId = clock.zone,
     ): ExpressiveWidgetUiState {
         val now = Instant.now(clock).atZone(zoneId)
-        val lastUpdated = Instant.ofEpochMilli(
-            preferences[lastUpdatedKey] ?: now.toInstant().toEpochMilli(),
-        ).atZone(zoneId)
-        val source = WidgetRefreshSource.fromStorage(preferences[refreshSourceKey])
 
         return ExpressiveWidgetUiState(
             timeText = now.format(timeFormatter),
             meridiemText = now.format(meridiemFormatter),
             dateText = now.format(dateFormatter),
-            lastUpdatedText = "Updated ${lastUpdated.format(shortTimeFormatter)}",
-            refreshSourceLabel = source.label,
         )
     }
 }
