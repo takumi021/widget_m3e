@@ -89,7 +89,9 @@ private fun SamsungHealthWidgetContent(
     uiState: SamsungHealthWidgetUiState,
 ) {
     val widgetSize = LocalSize.current
-    val compact = widgetSize.width < 210.dp || widgetSize.height < 170.dp
+    val narrow = widgetSize.width < 190.dp
+    val short = widgetSize.height < 170.dp
+    val compact = narrow
     val roomy = widgetSize.width >= 300.dp && widgetSize.height >= 230.dp
     val metricSizeClass = when {
         roomy -> ExpressiveWidgetTheme.HealthMetricSizeClass.Roomy
@@ -106,7 +108,7 @@ private fun SamsungHealthWidgetContent(
         compact -> 4.dp
         else -> 8.dp
     }
-    val showStatus = !uiState.isConnected
+    val showStatus = !uiState.isConnected && !short
 
     Box(
         modifier = GlanceModifier
