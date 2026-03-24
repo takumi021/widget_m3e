@@ -13,6 +13,12 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 
 object ExpressiveWidgetTheme {
+    enum class ClockSizeClass {
+        Compact,
+        Regular,
+        Large,
+    }
+
     val OuterCornerRadius = 30.dp
     val InnerCornerRadius = 18.dp
     val ContentPadding = 18.dp
@@ -55,27 +61,37 @@ object ExpressiveWidgetTheme {
         fontWeight = FontWeight.Medium,
     )
 
-    fun timeStyle(expanded: Boolean, color: ColorProvider) = TextStyle(
+    fun timeStyle(sizeClass: ClockSizeClass, color: ColorProvider) = TextStyle(
         color = color,
-        fontSize = if (expanded) 34.sp else 30.sp,
+        fontSize = when (sizeClass) {
+            ClockSizeClass.Compact -> 26.sp
+            ClockSizeClass.Regular -> 30.sp
+            ClockSizeClass.Large -> 36.sp
+        },
         fontWeight = FontWeight.Bold,
     )
 
-    fun meridiemStyle(color: ColorProvider) = TextStyle(
+    fun meridiemStyle(compact: Boolean, color: ColorProvider) = TextStyle(
         color = color,
-        fontSize = 14.sp,
+        fontSize = if (compact) 12.sp else 14.sp,
         fontWeight = FontWeight.Medium,
     )
 
-    fun dateStyle(color: ColorProvider) = TextStyle(
+    fun dateStyle(compact: Boolean, color: ColorProvider) = TextStyle(
         color = color,
-        fontSize = 14.sp,
+        fontSize = if (compact) 12.sp else 14.sp,
         fontWeight = FontWeight.Medium,
     )
 
     fun chipStyle(color: ColorProvider) = TextStyle(
         color = color,
         fontSize = 11.sp,
+        fontWeight = FontWeight.Bold,
+    )
+
+    fun boardCellStyle(large: Boolean, color: ColorProvider) = TextStyle(
+        color = color,
+        fontSize = if (large) 28.sp else 22.sp,
         fontWeight = FontWeight.Bold,
     )
 

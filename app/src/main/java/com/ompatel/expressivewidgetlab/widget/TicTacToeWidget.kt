@@ -10,7 +10,9 @@ import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalSize
 import androidx.glance.action.ActionParameters
+import androidx.glance.action.actionParametersOf
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.SizeMode
@@ -55,7 +57,7 @@ class TicTacToeWidgetReceiver : androidx.glance.appwidget.GlanceAppWidgetReceive
     override val glanceAppWidget: GlanceAppWidget = TicTacToeWidget()
 }
 
-private class ResetGameAction : ActionCallback {
+class ResetGameAction : ActionCallback {
     override suspend fun onAction(
         context: Context,
         glanceId: GlanceId,
@@ -68,14 +70,13 @@ private class ResetGameAction : ActionCallback {
     }
 }
 
-private abstract class BaseMoveAction(
-    private val index: Int,
-) : ActionCallback {
+class MoveAction : ActionCallback {
     override suspend fun onAction(
         context: Context,
         glanceId: GlanceId,
         parameters: ActionParameters,
     ) {
+        val index = parameters[CellIndexKey] ?: return
         updateAppWidgetState(context, glanceId) { preferences: MutablePreferences ->
             TicTacToeWidgetState.playMove(preferences, index)
         }
@@ -83,20 +84,26 @@ private abstract class BaseMoveAction(
     }
 }
 
-private class Move0Action : BaseMoveAction(0)
-private class Move1Action : BaseMoveAction(1)
-private class Move2Action : BaseMoveAction(2)
-private class Move3Action : BaseMoveAction(3)
-private class Move4Action : BaseMoveAction(4)
-private class Move5Action : BaseMoveAction(5)
-private class Move6Action : BaseMoveAction(6)
-private class Move7Action : BaseMoveAction(7)
-private class Move8Action : BaseMoveAction(8)
+private val CellIndexKey = ActionParameters.Key<Int>("cell_index")
 
 @Composable
 private fun TicTacToeWidgetContent(
     uiState: TicTacToeUiState,
 ) {
+    val widgetSize = LocalSize.current
+    val compact = widgetSize.width < 220.dp || widgetSize.height < 190.dp
+    val roomy = widgetSize.width >= 280.dp && widgetSize.height >= 240.dp
+    val cellSize = when {
+        roomy -> 72.dp
+        compact -> 48.dp
+        else -> 60.dp
+    }
+    val gridSpacing = if (compact) 6.dp else ExpressiveWidgetTheme.GridSpacing
+    val topSpacing = if (compact) 12.dp else 16.dp
+    val bottomSpacing = if (compact) 10.dp else 14.dp
+    val iconSize = if (compact) 34.dp else 40.dp
+    val iconInnerSize = if (compact) 18.dp else 22.dp
+
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
@@ -116,7 +123,7 @@ private fun TicTacToeWidgetContent(
             ) {
                 Box(
                     modifier = GlanceModifier
-                        .size(40.dp)
+                        .size(iconSize)
                         .cornerRadius(14.dp)
                         .background(GlanceTheme.colors.primaryContainer),
                     contentAlignment = Alignment.Center,
@@ -124,7 +131,7 @@ private fun TicTacToeWidgetContent(
                     Image(
                         provider = ImageProvider(R.drawable.ic_widget_game),
                         contentDescription = "Tic-tac-toe icon",
-                        modifier = GlanceModifier.size(22.dp),
+                        modifier = GlanceModifier.size(iconInnerSize),
                     )
                 }
 
@@ -142,15 +149,15 @@ private fun TicTacToeWidgetContent(
                 }
             }
 
-            Spacer(modifier = GlanceModifier.height(16.dp))
+            Spacer(modifier = GlanceModifier.height(topSpacing))
 
-            TicTacToeRow(uiState = uiState, indexes = listOf(0, 1, 2))
-            Spacer(modifier = GlanceModifier.height(ExpressiveWidgetTheme.GridSpacing))
-            TicTacToeRow(uiState = uiState, indexes = listOf(3, 4, 5))
-            Spacer(modifier = GlanceModifier.height(ExpressiveWidgetTheme.GridSpacing))
-            TicTacToeRow(uiState = uiState, indexes = listOf(6, 7, 8))
+            TicTacToeRow(uiState = uiState, indexes = listOf(0, 1, 2), cellSize = cellSize, spacing = gridSpacing)
+            Spacer(modifier = GlanceModifier.height(gridSpacing))
+            TicTacToeRow(uiState = uiState, indexes = listOf(3, 4, 5), cellSize = cellSize, spacing = gridSpacing)
+            Spacer(modifier = GlanceModifier.height(gridSpacing))
+            TicTacToeRow(uiState = uiState, indexes = listOf(6, 7, 8), cellSize = cellSize, spacing = gridSpacing)
 
-            Spacer(modifier = GlanceModifier.height(14.dp))
+            Spacer(modifier = GlanceModifier.height(bottomSpacing))
 
             Box(
                 modifier = GlanceModifier
@@ -173,13 +180,18 @@ private fun TicTacToeWidgetContent(
 private fun TicTacToeRow(
     uiState: TicTacToeUiState,
     indexes: List<Int>,
+    cellSize: androidx.compose.ui.unit.Dp,
+    spacing: androidx.compose.ui.unit.Dp,
 ) {
-    Row {
-        TicTacToeCell(uiState, indexes[0])
-        Spacer(modifier = GlanceModifier.width(ExpressiveWidgetTheme.GridSpacing))
-        TicTacToeCell(uiState, indexes[1])
-        Spacer(modifier = GlanceModifier.width(ExpressiveWidgetTheme.GridSpacing))
-        TicTacToeCell(uiState, indexes[2])
+    Row(
+        modifier = GlanceModifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.Horizontal.CenterHorizontally,
+    ) {
+        TicTacToeCell(uiState, indexes[0], cellSize)
+        Spacer(modifier = GlanceModifier.width(spacing))
+        TicTacToeCell(uiState, indexes[1], cellSize)
+        Spacer(modifier = GlanceModifier.width(spacing))
+        TicTacToeCell(uiState, indexes[2], cellSize)
     }
 }
 
@@ -187,19 +199,12 @@ private fun TicTacToeRow(
 private fun TicTacToeCell(
     uiState: TicTacToeUiState,
     index: Int,
+    cellSize: androidx.compose.ui.unit.Dp,
 ) {
     val cellValue = uiState.cells[index]
-    val action = when (index) {
-        0 -> actionRunCallback<Move0Action>()
-        1 -> actionRunCallback<Move1Action>()
-        2 -> actionRunCallback<Move2Action>()
-        3 -> actionRunCallback<Move3Action>()
-        4 -> actionRunCallback<Move4Action>()
-        5 -> actionRunCallback<Move5Action>()
-        6 -> actionRunCallback<Move6Action>()
-        7 -> actionRunCallback<Move7Action>()
-        else -> actionRunCallback<Move8Action>()
-    }
+    val action = actionRunCallback<MoveAction>(
+        parameters = actionParametersOf(CellIndexKey to index),
+    )
 
     val backgroundColor = when (cellValue) {
         "X" -> GlanceTheme.colors.primaryContainer
@@ -209,7 +214,7 @@ private fun TicTacToeCell(
 
     Box(
         modifier = GlanceModifier
-            .size(60.dp)
+            .size(cellSize)
             .cornerRadius(ExpressiveWidgetTheme.InnerCornerRadius)
             .background(backgroundColor)
             .clickable(action)
@@ -218,8 +223,8 @@ private fun TicTacToeCell(
     ) {
         Text(
             text = if (cellValue.isEmpty()) " " else cellValue,
-            style = ExpressiveWidgetTheme.timeStyle(
-                expanded = false,
+            style = ExpressiveWidgetTheme.boardCellStyle(
+                large = cellSize >= 60.dp,
                 color = when (cellValue) {
                     "X" -> GlanceTheme.colors.onPrimaryContainer
                     "O" -> GlanceTheme.colors.onTertiaryContainer

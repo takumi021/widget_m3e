@@ -90,7 +90,24 @@ private class RefreshClockAction : ActionCallback {
 private fun ExpressiveClockWidgetContent(
     uiState: ExpressiveWidgetUiState,
 ) {
-    val expanded = LocalSize.current.width >= 180.dp
+    val widgetSize = LocalSize.current
+    val compact = widgetSize.width < 180.dp || widgetSize.height < 130.dp
+    val roomy = widgetSize.width >= 260.dp && widgetSize.height >= 180.dp
+    val horizontalLayout = widgetSize.width >= 300.dp && widgetSize.height >= 150.dp
+    val iconSize = when {
+        roomy -> 44.dp
+        compact -> 32.dp
+        else -> 40.dp
+    }
+    val iconInnerSize = when {
+        roomy -> 24.dp
+        compact -> 18.dp
+        else -> 22.dp
+    }
+    val topSpacing = if (compact) 12.dp else 18.dp
+    val dateSpacing = if (compact) 10.dp else 14.dp
+    val titleSpacing = if (compact) 8.dp else ExpressiveWidgetTheme.ComfortableSpacing
+    val contentPadding = if (compact) 14.dp else ExpressiveWidgetTheme.ContentPadding
 
     Box(
         modifier = GlanceModifier
@@ -98,7 +115,7 @@ private fun ExpressiveClockWidgetContent(
             .cornerRadius(ExpressiveWidgetTheme.OuterCornerRadius)
             .background(GlanceTheme.colors.widgetBackground)
             .clickable(actionRunCallback<RefreshClockAction>())
-            .padding(ExpressiveWidgetTheme.ContentPadding),
+            .padding(contentPadding),
         contentAlignment = Alignment.Center,
     ) {
         Column(
@@ -112,7 +129,7 @@ private fun ExpressiveClockWidgetContent(
             ) {
                 Box(
                     modifier = GlanceModifier
-                        .size(40.dp)
+                        .size(iconSize)
                         .cornerRadius(14.dp)
                         .background(GlanceTheme.colors.primaryContainer),
                     contentAlignment = Alignment.Center,
@@ -121,11 +138,11 @@ private fun ExpressiveClockWidgetContent(
                         provider = ImageProvider(R.drawable.ic_widget_clock),
                         contentDescription = "Clock icon",
                         colorFilter = ColorFilter.tint(GlanceTheme.colors.onPrimaryContainer),
-                        modifier = GlanceModifier.size(22.dp),
+                        modifier = GlanceModifier.size(iconInnerSize),
                     )
                 }
 
-                Spacer(modifier = GlanceModifier.width(ExpressiveWidgetTheme.ComfortableSpacing))
+                Spacer(modifier = GlanceModifier.width(titleSpacing))
 
                 Column {
                     Text(
@@ -135,37 +152,79 @@ private fun ExpressiveClockWidgetContent(
                 }
             }
 
-            Spacer(modifier = GlanceModifier.height(18.dp))
+            Spacer(modifier = GlanceModifier.height(topSpacing))
 
-            Row(
-                verticalAlignment = Alignment.Vertical.Bottom,
-            ) {
-                Text(
-                    text = uiState.timeText,
-                    style = ExpressiveWidgetTheme.timeStyle(
-                        expanded = expanded,
-                        color = GlanceTheme.colors.onSurface,
-                    ),
+            if (horizontalLayout) {
+                Row(
+                    modifier = GlanceModifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Vertical.CenterVertically,
+                ) {
+                    TimeRow(
+                        uiState = uiState,
+                        compact = compact,
+                        roomy = roomy,
+                    )
+
+                    Spacer(modifier = GlanceModifier.width(16.dp))
+
+                    Text(
+                        text = uiState.dateText,
+                        style = ExpressiveWidgetTheme.dateStyle(
+                            compact = compact,
+                            color = GlanceTheme.colors.onSurfaceVariant,
+                        ),
+                    )
+                }
+            } else {
+                TimeRow(
+                    uiState = uiState,
+                    compact = compact,
+                    roomy = roomy,
                 )
 
-                Spacer(modifier = GlanceModifier.width(8.dp))
+                Spacer(modifier = GlanceModifier.height(dateSpacing))
 
                 Text(
-                    text = uiState.meridiemText,
-                    style = ExpressiveWidgetTheme.meridiemStyle(
-                        color = GlanceTheme.colors.primary,
+                    text = uiState.dateText,
+                    style = ExpressiveWidgetTheme.dateStyle(
+                        compact = compact,
+                        color = GlanceTheme.colors.onSurfaceVariant,
                     ),
                 )
             }
-
-            Spacer(modifier = GlanceModifier.height(14.dp))
-
-            Text(
-                text = uiState.dateText,
-                style = ExpressiveWidgetTheme.dateStyle(
-                    color = GlanceTheme.colors.onSurfaceVariant,
-                ),
-            )
         }
+    }
+}
+
+@Composable
+private fun TimeRow(
+    uiState: ExpressiveWidgetUiState,
+    compact: Boolean,
+    roomy: Boolean,
+) {
+    Row(
+        verticalAlignment = Alignment.Vertical.Bottom,
+    ) {
+        Text(
+            text = uiState.timeText,
+            style = ExpressiveWidgetTheme.timeStyle(
+                sizeClass = when {
+                    roomy -> ExpressiveWidgetTheme.ClockSizeClass.Large
+                    compact -> ExpressiveWidgetTheme.ClockSizeClass.Compact
+                    else -> ExpressiveWidgetTheme.ClockSizeClass.Regular
+                },
+                color = GlanceTheme.colors.onSurface,
+            ),
+        )
+
+        Spacer(modifier = GlanceModifier.width(if (compact) 6.dp else 8.dp))
+
+        Text(
+            text = uiState.meridiemText,
+            style = ExpressiveWidgetTheme.meridiemStyle(
+                compact = compact,
+                color = GlanceTheme.colors.primary,
+            ),
+        )
     }
 }
