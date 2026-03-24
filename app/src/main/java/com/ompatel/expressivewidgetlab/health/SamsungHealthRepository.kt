@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.os.Build
 import com.samsung.android.sdk.health.data.HealthDataService
+import com.samsung.android.sdk.health.data.data.entries.SleepSession
 import com.samsung.android.sdk.health.data.error.HealthDataException
 import com.samsung.android.sdk.health.data.error.ResolvablePlatformException
 import com.samsung.android.sdk.health.data.permission.AccessType
@@ -157,8 +158,15 @@ class SamsungHealthRepository(
             .setLocalTimeFilter(LocalTimeFilter.of(start, now))
             .setOrdering(Ordering.DESC)
             .build()
-        val latest = store.readData(request).dataList.firstOrNull() ?: return "--"
-        val duration = latest.getValue(DataType.SleepType.DURATION) ?: return "--"
+        val latestSession = store.readData(request).dataList
+            .asSequence()
+            .mapNotNull { point ->
+                point.getValue(DataType.SleepType.SESSIONS)
+                    ?.filter { session -> isTrackedSleepSession(session) }
+                    ?.maxByOrNull { session -> session.endTime }
+            }
+            .firstOrNull() ?: return "--"
+        val duration = latestSession.duration
         val hours = duration.toHours()
         val minutes = duration.minusHours(hours).toMinutes()
         return String.format(Locale.getDefault(), "%dh %02dm", hours, minutes)
@@ -182,6 +190,13 @@ class SamsungHealthRepository(
             totalSteps >= 1_000 -> String.format(Locale.getDefault(), "%.1fk", totalSteps / 1000f)
             else -> totalSteps.toString()
         }
+    }
+
+    private fun isTrackedSleepSession(session: SleepSession): Boolean {
+        if (session.duration.isZero || session.duration.isNegative) {
+            return false
+        }
+        return !session.stages.isNullOrEmpty()
     }
 
     private fun unavailableSnapshot(message: String): SamsungHealthMetricSnapshot {
