@@ -95,11 +95,16 @@ class SamsungHealthRepository(
                 return unavailableSnapshot("Open the app and connect Samsung Health.")
             }
 
+            val steps = runCatching { readSteps(store) }.getOrDefault("--")
+            val heartRate = runCatching { readHeartRate(store) }.getOrDefault("--")
+            val sleep = runCatching { readLatestSleep(store) }.getOrDefault("--")
+            val energyScore = runCatching { readEnergyScore(store) }.getOrDefault("0")
+
             SamsungHealthMetricSnapshot(
-                steps = readSteps(store),
-                heartRate = readHeartRate(store),
-                sleep = readSleep(store),
-                energyScore = readEnergyScore(store),
+                steps = steps,
+                heartRate = heartRate,
+                sleep = sleep,
+                energyScore = energyScore,
                 status = "Connected",
                 isConnected = true,
             )
@@ -135,13 +140,15 @@ class SamsungHealthRepository(
         return bpm.toInt().toString()
     }
 
-    private suspend fun readSleep(store: com.samsung.android.sdk.health.data.HealthDataStore): String {
-        val today = LocalDate.now()
-        val request = DataType.SleepType.TOTAL_DURATION.requestBuilder
-            .setLocalDateFilter(LocalDateFilter.of(today, today))
+    private suspend fun readLatestSleep(store: com.samsung.android.sdk.health.data.HealthDataStore): String {
+        val now = LocalDateTime.now()
+        val start = now.minusDays(3)
+        val request = DataTypes.SLEEP.readDataRequestBuilder
+            .setLocalTimeFilter(LocalTimeFilter.of(start, now))
+            .setOrdering(Ordering.DESC)
             .build()
-        val duration = store.aggregateData(request).dataList.lastOrNull()?.value
-            ?: return "0h 00m"
+        val latest = store.readData(request).dataList.firstOrNull() ?: return "--"
+        val duration = latest.getValue(DataType.SleepType.DURATION) ?: return "--"
         val hours = duration.toHours()
         val minutes = duration.minusHours(hours).toMinutes()
         return String.format(Locale.getDefault(), "%dh %02dm", hours, minutes)
