@@ -11,7 +11,7 @@ Production-ready Android Studio sample showing a modern home screen widget built
 - Glance 1.1.1
 - WorkManager 2.10.5
 - Target SDK 36
-- Min SDK 26
+- Min SDK 29
 
 ## Open In Android Studio
 
@@ -23,7 +23,7 @@ Production-ready Android Studio sample showing a modern home screen widget built
 
 ## Run
 
-1. Start an emulator or connect a device running Android 8.0 or newer.
+1. Start an emulator or connect a device running Android 10 or newer.
 2. Click **Run 'app'** in Android Studio.
 3. After install, long-press the launcher home screen.
 4. Open the widgets picker.
