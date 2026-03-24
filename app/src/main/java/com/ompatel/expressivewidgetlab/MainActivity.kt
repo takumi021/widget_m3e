@@ -8,29 +8,23 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Games
-import androidx.compose.material.icons.rounded.Widgets
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -54,6 +48,8 @@ class MainActivity : ComponentActivity() {
 
                     HomeScreen(
                         uiState = uiState,
+                        onConnectSamsungHealth = { viewModel.connectSamsungHealth(this) },
+                        onRefreshSamsungHealth = viewModel::refreshSamsungHealth,
                     )
                 }
             }
@@ -64,6 +60,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun HomeScreen(
     uiState: HomeUiState,
+    onConnectSamsungHealth: () -> Unit,
+    onRefreshSamsungHealth: () -> Unit,
 ) {
     val gradient = Brush.verticalGradient(
         colors = listOf(
@@ -90,21 +88,19 @@ private fun HomeScreen(
                     .padding(horizontal = 20.dp, vertical = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(18.dp),
             ) {
-                HeaderCard()
-
                 ElevatedCard(
+                    shape = RoundedCornerShape(36.dp),
                     colors = CardDefaults.elevatedCardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                     ),
-                    shape = RoundedCornerShape(28.dp),
                 ) {
                     Column(
-                        modifier = Modifier.padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.padding(24.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         Text(
-                            text = "Widget status",
-                            style = MaterialTheme.typography.titleLarge,
+                            text = "Widget Lab",
+                            style = MaterialTheme.typography.displaySmall,
                         )
                         Text(
                             text = uiState.statusMessage,
@@ -122,66 +118,36 @@ private fun HomeScreen(
                 ) {
                     Column(
                         modifier = Modifier.padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        Text(
+                            text = "Samsung Health",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                        Text(
+                            text = uiState.samsungHealthMessage,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+
+                        Button(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = onConnectSamsungHealth,
+                            enabled = !uiState.isConnectingSamsungHealth,
                         ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Games,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            )
-                            Text(
-                                text = "Add Expressive Clock and Tic-Tac-Toe from the home screen widget picker for the cleanest experience.",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            )
+                            Text(if (uiState.isConnectingSamsungHealth) "Connecting..." else "Connect Samsung Health")
+                        }
+
+                        OutlinedButton(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = onRefreshSamsungHealth,
+                        ) {
+                            Text("Refresh health widget")
                         }
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun HeaderCard() {
-    ElevatedCard(
-        shape = RoundedCornerShape(36.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        ),
-    ) {
-        Column(
-            modifier = Modifier.padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .padding(12.dp),
-            ) {
-                Icon(
-                    modifier = Modifier.size(28.dp),
-                    imageVector = Icons.Rounded.Widgets,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                )
-            }
-
-            Text(
-                text = "Expressive Widget Lab",
-                style = MaterialTheme.typography.displaySmall,
-            )
-
-            Text(
-                text = "A Compose-first host app for expressive Glance widgets with dynamic color, clean typography, and a minimal Material 3 surface.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
     }
 }
@@ -191,9 +157,9 @@ private fun HeaderCard() {
 private fun HomeScreenPreview() {
     ExpressiveWidgetLabTheme(dynamicColor = false) {
         HomeScreen(
-            uiState = HomeUiState(
-                statusMessage = "The clock follows your device time automatically, and both widgets are ready from the home screen picker.",
-            ),
+            uiState = HomeUiState(),
+            onConnectSamsungHealth = {},
+            onRefreshSamsungHealth = {},
         )
     }
 }

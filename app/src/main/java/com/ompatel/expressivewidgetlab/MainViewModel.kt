@@ -1,35 +1,69 @@
 package com.ompatel.expressivewidgetlab
 
+import android.app.Activity
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.ompatel.expressivewidgetlab.health.SamsungHealthRepository
+import com.ompatel.expressivewidgetlab.worker.SamsungHealthWidgetWorker
 import com.ompatel.expressivewidgetlab.worker.WidgetUpdateWorker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 data class HomeUiState(
-    val statusMessage: String = "The clock follows your device time automatically, and both widgets are ready from the home screen picker.",
+    val statusMessage: String = "Widgets are ready from the home screen picker.",
+    val samsungHealthMessage: String = "Connect Samsung Health to populate the health widget.",
+    val isConnectingSamsungHealth: Boolean = false,
 )
 
 class MainViewModel(
     application: Application,
 ) : AndroidViewModel(application) {
 
+    private val samsungHealthRepository = SamsungHealthRepository(application)
+
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
-        ensureSchedule()
+        WidgetUpdateWorker.ensureClockSchedules(getApplication())
+        SamsungHealthWidgetWorker.ensureScheduled(getApplication())
     }
 
-    private fun ensureSchedule() {
-        WidgetUpdateWorker.ensureClockSchedules(getApplication())
-        _uiState.value = _uiState.value.copy(
-            statusMessage = "The clock follows your device time automatically, and both widgets are ready from the home screen picker.",
-        )
+    fun connectSamsungHealth(activity: Activity) {
+        if (_uiState.value.isConnectingSamsungHealth) return
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isConnectingSamsungHealth = true,
+                samsungHealthMessage = "Connecting Samsung Health...",
+            )
+
+            val permissionState = samsungHealthRepository.ensureReadPermissions(activity)
+
+            if (permissionState.isReady) {
+                SamsungHealthWidgetWorker.enqueueImmediateRefresh(getApplication())
+            }
+
+            _uiState.value = _uiState.value.copy(
+                isConnectingSamsungHealth = false,
+                samsungHealthMessage = permissionState.message,
+            )
+        }
+    }
+
+    fun refreshSamsungHealth() {
+        viewModelScope.launch {
+            SamsungHealthWidgetWorker.enqueueImmediateRefresh(getApplication())
+            _uiState.value = _uiState.value.copy(
+                samsungHealthMessage = "Refreshing Samsung Health widget data...",
+            )
+        }
     }
 
     companion object {
