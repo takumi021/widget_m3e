@@ -8,8 +8,6 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
-import androidx.glance.Image
-import androidx.glance.ImageProvider
 import androidx.glance.LocalSize
 import androidx.glance.action.ActionParameters
 import androidx.glance.action.actionParametersOf
@@ -36,7 +34,6 @@ import androidx.glance.layout.size
 import androidx.glance.layout.width
 import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.glance.text.Text
-import com.ompatel.expressivewidgetlab.R
 
 class TicTacToeWidget : GlanceAppWidget() {
     override val sizeMode = SizeMode.Single
@@ -94,19 +91,17 @@ private fun TicTacToeWidgetContent(
     uiState: TicTacToeUiState,
 ) {
     val widgetSize = LocalSize.current
-    val compact = widgetSize.width < 240.dp || widgetSize.height < 220.dp
-    val roomy = widgetSize.width >= 300.dp && widgetSize.height >= 260.dp
+    val compact = widgetSize.width < 220.dp || widgetSize.height < 200.dp
+    val roomy = widgetSize.width >= 280.dp && widgetSize.height >= 240.dp
     val cellSize = when {
         roomy -> 68.dp
-        compact -> 50.dp
+        compact -> 46.dp
         else -> 58.dp
     }
     val gridSpacing = if (compact) 6.dp else ExpressiveWidgetTheme.GridSpacing
-    val topSpacing = if (compact) 10.dp else 14.dp
-    val bottomSpacing = if (compact) 8.dp else 12.dp
-    val iconSize = if (compact) 34.dp else 40.dp
-    val iconInnerSize = if (compact) 18.dp else 22.dp
-    val contentPadding = if (compact) 14.dp else ExpressiveWidgetTheme.ContentPadding
+    val topSpacing = if (compact) 4.dp else 8.dp
+    val bottomSpacing = if (compact) 8.dp else 10.dp
+    val contentPadding = if (compact) 10.dp else 14.dp
 
     Box(
         modifier = GlanceModifier
@@ -118,40 +113,9 @@ private fun TicTacToeWidgetContent(
     ) {
         Column(
             modifier = GlanceModifier.fillMaxSize(),
-            horizontalAlignment = Alignment.Horizontal.Start,
+            verticalAlignment = Alignment.Vertical.CenterVertically,
+            horizontalAlignment = Alignment.Horizontal.CenterHorizontally,
         ) {
-            Row(
-                modifier = GlanceModifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Vertical.CenterVertically,
-            ) {
-                Box(
-                    modifier = GlanceModifier
-                        .size(iconSize)
-                        .cornerRadius(14.dp)
-                        .background(GlanceTheme.colors.primaryContainer),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Image(
-                        provider = ImageProvider(R.drawable.ic_widget_game),
-                        contentDescription = "Tic-tac-toe icon",
-                        modifier = GlanceModifier.size(iconInnerSize),
-                    )
-                }
-
-                Spacer(modifier = GlanceModifier.width(ExpressiveWidgetTheme.ComfortableSpacing))
-
-                Column {
-                    Text(
-                        text = "Expressive Tic-Tac-Toe",
-                        style = ExpressiveWidgetTheme.labelStyle(GlanceTheme.colors.onSurface),
-                    )
-                    Text(
-                        text = uiState.statusText,
-                        style = ExpressiveWidgetTheme.labelStyle(GlanceTheme.colors.onSurfaceVariant),
-                    )
-                }
-            }
-
             Spacer(modifier = GlanceModifier.height(topSpacing))
 
             TicTacToeRow(uiState = uiState, indexes = listOf(0, 1, 2), cellSize = cellSize, spacing = gridSpacing)
@@ -162,18 +126,43 @@ private fun TicTacToeWidgetContent(
 
             Spacer(modifier = GlanceModifier.height(bottomSpacing))
 
-            Box(
-                modifier = GlanceModifier
-                    .cornerRadius(999.dp)
-                    .background(GlanceTheme.colors.secondaryContainer)
-                    .clickable(actionRunCallback<ResetGameAction>())
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                contentAlignment = Alignment.Center,
+            Row(
+                modifier = GlanceModifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Vertical.CenterVertically,
+                horizontalAlignment = Alignment.Horizontal.CenterHorizontally,
             ) {
-                Text(
-                    text = if (uiState.isFinished) "New round" else "Reset",
-                    style = ExpressiveWidgetTheme.chipStyle(GlanceTheme.colors.onSecondaryContainer),
-                )
+                Box(
+                    modifier = GlanceModifier
+                        .cornerRadius(999.dp)
+                        .background(GlanceTheme.colors.surfaceVariant)
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = uiState.statusText,
+                        style = ExpressiveWidgetTheme.compactStatusStyle(
+                            color = GlanceTheme.colors.onSurfaceVariant,
+                        ),
+                    )
+                }
+
+                Spacer(modifier = GlanceModifier.width(8.dp))
+
+                Box(
+                    modifier = GlanceModifier
+                        .cornerRadius(999.dp)
+                        .background(GlanceTheme.colors.secondaryContainer)
+                        .clickable(actionRunCallback<ResetGameAction>())
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = if (uiState.isFinished) "New" else "Reset",
+                        style = ExpressiveWidgetTheme.compactStatusStyle(
+                            color = GlanceTheme.colors.onSecondaryContainer,
+                        ),
+                    )
+                }
             }
         }
     }

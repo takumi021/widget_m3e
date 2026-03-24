@@ -10,8 +10,6 @@ import androidx.glance.ColorFilter
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
-import androidx.glance.Image
-import androidx.glance.ImageProvider
 import androidx.glance.LocalSize
 import androidx.glance.action.ActionParameters
 import androidx.glance.action.clickable
@@ -32,11 +30,9 @@ import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
-import androidx.glance.layout.size
 import androidx.glance.layout.width
 import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.glance.text.Text
-import com.ompatel.expressivewidgetlab.R
 
 class ExpressiveClockWidget : GlanceAppWidget() {
 
@@ -90,29 +86,19 @@ private fun ExpressiveClockWidgetContent(
     uiState: ExpressiveWidgetUiState,
 ) {
     val widgetSize = LocalSize.current
-    val compact = widgetSize.width < 180.dp || widgetSize.height < 130.dp
-    val roomy = widgetSize.width >= 250.dp && widgetSize.height >= 160.dp
+    val compact = widgetSize.width < 160.dp || widgetSize.height < 110.dp
+    val roomy = widgetSize.width >= 220.dp && widgetSize.height >= 150.dp
     val wide = widgetSize.width >= 300.dp
-    val iconSize = when {
-        wide -> 48.dp
-        roomy -> 44.dp
-        compact -> 32.dp
-        else -> 40.dp
+    val dateSpacing = when {
+        wide -> 12.dp
+        compact -> 6.dp
+        else -> 8.dp
     }
-    val iconInnerSize = when {
-        wide -> 26.dp
-        roomy -> 24.dp
-        compact -> 18.dp
-        else -> 22.dp
+    val contentPadding = when {
+        wide -> 18.dp
+        compact -> 10.dp
+        else -> 14.dp
     }
-    val topSpacing = when {
-        wide -> 22.dp
-        compact -> 12.dp
-        else -> 18.dp
-    }
-    val dateSpacing = if (compact) 10.dp else 14.dp
-    val titleSpacing = if (compact) 8.dp else ExpressiveWidgetTheme.ComfortableSpacing
-    val contentPadding = if (compact) 14.dp else ExpressiveWidgetTheme.ContentPadding
 
     Box(
         modifier = GlanceModifier
@@ -124,38 +110,10 @@ private fun ExpressiveClockWidgetContent(
         contentAlignment = Alignment.Center,
     ) {
         Column(
+            modifier = GlanceModifier.fillMaxSize(),
+            verticalAlignment = Alignment.Vertical.CenterVertically,
             horizontalAlignment = Alignment.Horizontal.CenterHorizontally,
         ) {
-            Row(
-                verticalAlignment = Alignment.Vertical.CenterVertically,
-            ) {
-                Box(
-                    modifier = GlanceModifier
-                        .size(iconSize)
-                        .cornerRadius(14.dp)
-                        .background(GlanceTheme.colors.primaryContainer),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Image(
-                        provider = ImageProvider(R.drawable.ic_widget_clock),
-                        contentDescription = "Clock icon",
-                        colorFilter = ColorFilter.tint(GlanceTheme.colors.onPrimaryContainer),
-                        modifier = GlanceModifier.size(iconInnerSize),
-                    )
-                }
-
-                Spacer(modifier = GlanceModifier.width(titleSpacing))
-
-                Column {
-                    Text(
-                        text = "Expressive Clock",
-                        style = ExpressiveWidgetTheme.labelStyle(GlanceTheme.colors.onSurface),
-                    )
-                }
-            }
-
-            Spacer(modifier = GlanceModifier.height(topSpacing))
-
             TimeRow(
                 uiState = uiState,
                 compact = compact,
@@ -203,12 +161,12 @@ private fun TimeRow(
         Spacer(modifier = GlanceModifier.width(if (compact) 6.dp else 10.dp))
 
         Text(
-            text = uiState.meridiemText,
-            style = ExpressiveWidgetTheme.meridiemStyle(
-                compact = compact,
-                roomy = roomy || wide,
-                color = GlanceTheme.colors.primary,
-            ),
-        )
-    }
+        text = uiState.meridiemText,
+        style = ExpressiveWidgetTheme.meridiemStyle(
+            compact = compact,
+            roomy = roomy || wide,
+            color = GlanceTheme.colors.primary,
+        ),
+    )
+}
 }

@@ -99,6 +99,12 @@ object ExpressiveWidgetTheme {
         fontWeight = FontWeight.Bold,
     )
 
+    fun compactStatusStyle(color: ColorProvider) = TextStyle(
+        color = color,
+        fontSize = 10.sp,
+        fontWeight = FontWeight.Medium,
+    )
+
     fun boardCellStyle(large: Boolean, color: ColorProvider) = TextStyle(
         color = color,
         fontSize = if (large) 28.sp else 22.sp,
