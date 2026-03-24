@@ -111,6 +111,12 @@ object ExpressiveWidgetTheme {
         fontWeight = FontWeight.Bold,
     )
 
+    fun healthMetricValueStyle(color: ColorProvider) = TextStyle(
+        color = color,
+        fontSize = 20.sp,
+        fontWeight = FontWeight.Bold,
+    )
+
     @Composable
     fun GlanceSurface(content: @Composable () -> Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

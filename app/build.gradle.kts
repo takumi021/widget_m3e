@@ -48,6 +48,9 @@ android {
 
 dependencies {
     val composeBom = platform("androidx.compose:compose-bom:2026.02.01")
+    val samsungHealthSdk = fileTree("libs") {
+        include("samsung-health-data-api-*.aar")
+    }
 
     implementation(composeBom)
     androidTestImplementation(composeBom)
@@ -67,6 +70,7 @@ dependencies {
     implementation("androidx.glance:glance-material3:1.1.1")
 
     implementation("androidx.work:work-runtime-ktx:2.10.5")
+    implementation(samsungHealthSdk)
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
