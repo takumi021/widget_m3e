@@ -74,7 +74,7 @@ class SamsungHealthWidgetReceiver : GlanceAppWidgetReceiver() {
     }
 }
 
-private class RefreshSamsungHealthAction : ActionCallback {
+class RefreshSamsungHealthAction : ActionCallback {
     override suspend fun onAction(
         context: Context,
         glanceId: GlanceId,

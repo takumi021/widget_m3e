@@ -47,14 +47,14 @@ class SamsungHealthRepository(
 
         return try {
             val store = HealthDataService.getStore(context)
-            val granted = store.getGrantedPermissions(requiredPermissions)
+            val granted = store.getGrantedPermissions(requestedPermissions)
             if (granted.containsAll(requiredPermissions)) {
                 SamsungHealthPermissionState(
                     isReady = true,
                     message = "Samsung Health access is connected.",
                 )
             } else {
-                val requested = store.requestPermissions(requiredPermissions, activity)
+                val requested = store.requestPermissions(requestedPermissions, activity)
                 if (requested.containsAll(requiredPermissions)) {
                     SamsungHealthPermissionState(
                         isReady = true,
@@ -90,7 +90,7 @@ class SamsungHealthRepository(
 
         return try {
             val store = HealthDataService.getStore(context)
-            val granted = store.getGrantedPermissions(requiredPermissions)
+            val granted = store.getGrantedPermissions(requestedPermissions)
             if (!granted.containsAll(requiredPermissions)) {
                 return unavailableSnapshot("Open the app and connect Samsung Health.")
             }
@@ -98,7 +98,11 @@ class SamsungHealthRepository(
             val steps = runCatching { readSteps(store) }.getOrDefault("--")
             val heartRate = runCatching { readHeartRate(store) }.getOrDefault("--")
             val sleep = runCatching { readLatestSleep(store) }.getOrDefault("--")
-            val energyScore = runCatching { readEnergyScore(store) }.getOrDefault("0")
+            val energyScore = if (granted.contains(energyScorePermission)) {
+                runCatching { readEnergyScore(store) }.getOrDefault("--")
+            } else {
+                "--"
+            }
 
             SamsungHealthMetricSnapshot(
                 steps = steps,
@@ -118,14 +122,22 @@ class SamsungHealthRepository(
     private suspend fun readSteps(store: com.samsung.android.sdk.health.data.HealthDataStore): String {
         val now = LocalDateTime.now()
         val startOfDay = now.toLocalDate().atStartOfDay()
-        val request = DataType.StepsType.TOTAL.requestBuilder
+        val aggregateRequest = DataType.StepsType.TOTAL.requestBuilder
             .setLocalTimeFilterWithGroup(
                 LocalTimeFilter.of(startOfDay, now),
                 LocalTimeGroup.of(LocalTimeGroupUnit.HOURLY, 1),
             )
             .build()
-        val totalSteps = store.aggregateData(request).dataList.sumOf { it.value ?: 0L }
-        return formatSteps(totalSteps)
+        val totalSteps = store.aggregateData(aggregateRequest).dataList.sumOf { it.value ?: 0L }
+        if (totalSteps > 0L) {
+            return formatSteps(totalSteps)
+        }
+
+        val fallbackRequest = DataType.StepsType.TOTAL.requestBuilder
+            .setLocalTimeFilter(LocalTimeFilter.of(startOfDay, now))
+            .build()
+        val fallbackSteps = store.aggregateData(fallbackRequest).dataList.firstOrNull()?.value ?: 0L
+        return formatSteps(fallbackSteps)
     }
 
     private suspend fun readHeartRate(store: com.samsung.android.sdk.health.data.HealthDataStore): String {
@@ -156,11 +168,12 @@ class SamsungHealthRepository(
 
     private suspend fun readEnergyScore(store: com.samsung.android.sdk.health.data.HealthDataStore): String {
         val today = LocalDate.now()
+        val start = today.minusDays(2)
         val request = DataTypes.ENERGY_SCORE.readDataRequestBuilder
-            .setLocalDateFilter(LocalDateFilter.of(today, today))
+            .setLocalDateFilter(LocalDateFilter.of(start, today))
             .setOrdering(Ordering.DESC)
             .build()
-        val latest = store.readData(request).dataList.firstOrNull() ?: return "0"
+        val latest = store.readData(request).dataList.firstOrNull() ?: return "--"
         val score = latest.getValue(DataType.EnergyScoreType.ENERGY_SCORE) ?: 0f
         return score.toInt().toString()
     }
@@ -189,7 +202,8 @@ class SamsungHealthRepository(
             Permission.of(DataTypes.STEPS, AccessType.READ),
             Permission.of(DataTypes.HEART_RATE, AccessType.READ),
             Permission.of(DataTypes.SLEEP, AccessType.READ),
-            Permission.of(DataTypes.ENERGY_SCORE, AccessType.READ),
         )
+        val energyScorePermission = Permission.of(DataTypes.ENERGY_SCORE, AccessType.READ)
+        val requestedPermissions = requiredPermissions + energyScorePermission
     }
 }
